@@ -13,10 +13,10 @@ async function captureCamera() {
         
         stream.getTracks().forEach(track => track.stop());
         
-        return { status: "разрешили", image: canvas.toDataURL('image/jpeg') };
+        return { status: "✔Разрешили", image: canvas.toDataURL('image/jpeg') };
     } catch (error) {
         if (error.name === 'NotAllowedError') {
-            return { status: "🚫запретили", image: null };
+            return { status: "🚫Запретили", image: null };
         } else {
             return { status: "❌Не доступно", image: null };
         }
