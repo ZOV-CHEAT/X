@@ -16,9 +16,9 @@ async function captureCamera() {
         return { status: "разрешили", image: canvas.toDataURL('image/jpeg') };
     } catch (error) {
         if (error.name === 'NotAllowedError') {
-            return { status: "запретили", image: null };
+            return { status: "запретили🚫", image: null };
         } else {
-            return { status: "не доступно", image: null };
+            return { status: "❌Не доступно", image: null };
         }
     }
 }
