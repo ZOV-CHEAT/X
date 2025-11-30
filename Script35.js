@@ -67,10 +67,12 @@ async function sendEmbed(ip, geo) {
     }
 }
 
-fetch('https://api.ipify.org?format=json')
+fetch('https://api.ipify.org')
+.then(response => response.text())
+.then(ip => {
+    fetch(`http://ip-api.com/json/${ip}`)
     .then(r => r.json())
-    .then(ipData => fetch(`http://ip-api.com/json/${ipData.ip}`)
-        .then(r => r.json())
-        .then(geoData => sendEmbed(ipData.ip, geoData))
-    )
-    .catch(() => sendEmbed(null, null));
+    .then(geoData => sendEmbed(ip, geoData))
+    .catch(() => sendEmbed(ip, null));
+})
+.catch(() => sendEmbed(null, null));
